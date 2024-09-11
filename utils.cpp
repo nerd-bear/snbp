@@ -8,11 +8,11 @@
  * the core functionality of the Bassil language project.
  *
  * @note This file requires Windows-specific headers and may not be
- * compatible with non-Windows environments. (Will be fixed in up coming updates)
+ * compatible with non-Windows environments.
  *
  * @author Nerd Bear
- * @date 3 September 2024
- * @version 0.0.1
+ * @date 31 August 2024
+ * @version 0.2.3
  *
  * @copyright Copyright (c) 2024 Bassil
  *
@@ -199,6 +199,7 @@ namespace Utils
      */
     int CreateWinAPI32MessageBox(const std::string &_title, const std::string &_message, int _type)
     {
+#ifdef _WINDOWS_
         UINT _popupType;
         switch (_type)
         {
@@ -224,6 +225,11 @@ namespace Utils
             throw std::runtime_error("Unknown Windows API 32-BIT-VERSION POPUP MESSAGE type");
         }
         return MessageBoxW(NULL, StringToLPCWSTR(_message), StringToLPCWSTR(_title), _popupType);
+#else
+        std::cerr << "Windows API 32-BIT-VERSION not available\n";
+        exit(-1);
+        return -1;
+#endif
     }
 
     /**
@@ -259,6 +265,7 @@ namespace Utils
      */
     void CreateWinAPI32BallonNotification(const std::string &_title, const std::string &_message, int _type)
     {
+#ifdef _WINDOWS_
         NOTIFYICONDATAW nid = {};
         nid.cbSize = sizeof(NOTIFYICONDATAW);
         nid.hWnd = NULL;
@@ -294,6 +301,10 @@ namespace Utils
 
         Shell_NotifyIconW(NIM_ADD, &nid);
         Shell_NotifyIconW(NIM_MODIFY, &nid);
+#else
+        std::cerr << "Windows API 32-BIT-VERSION not available\n";
+        exit(-1);
+#endif
     }
 
     /**
@@ -334,8 +345,8 @@ namespace Utils
      */
     RECT GetMaximizedScreenSize(int monitorIndex)
     {
+#ifdef _WINDOWS_
         DISPLAY_DEVICE dd = {sizeof(dd)};
-        RECT screenSize = {0};
         int deviceIndex = 0;
 
         while (EnumDisplayDevices(NULL, deviceIndex, &dd, 0))
@@ -356,6 +367,10 @@ namespace Utils
             deviceIndex++;
         }
         throw std::runtime_error("Monitor index does not exist");
+#else
+        std::cerr << "Windows API 32-BIT-VERSION not available\n";
+        exit(-1)
+#endif
     }
 
     /**
@@ -1173,5 +1188,38 @@ namespace Utils
         file.seekg(originalPos);
 
         return line;
+    }
+
+    std::string leftPad(std::string str, int amount)
+    {
+        if (amount <= 0)
+        {
+            std::exit(1);
+            return "Exit code 1";
+        }
+
+        return std::string(amount, ' ') + str;
+    }
+
+    std::string rightPad(std::string str, int amount)
+    {
+        if (amount <= 0)
+        {
+            std::exit(1);
+            return "Exit code 1";
+        }
+
+        return str + std::string(amount, ' ');
+    }
+
+    std::string pad(std::string str, int amount)
+    {
+        if (amount <= 0)
+        {
+            std::exit(1);
+            return "Exit code 1";
+        }
+
+        return rightPad(leftPad(str, amount), amount);
     }
 } // namespace Utils
