@@ -1,5 +1,5 @@
 /**
- * @file utils.cpp
+ * @file SNBP.cpp
  * @brief Comprehensive implementation of utility functions for the Bassil language project.
  *
  * This file contains a collection of utility functions that provide various
@@ -12,19 +12,40 @@
  *
  * @author Nerd Bear
  * @date 31 August 2024
- * @version 0.2.3
+ * @version 0.7.4
  *
  * @copyright Copyright (c) 2024 Bassil
  *
- * @see utils.h
+ * @see SNBP.h
  */
 
-#include "C:/coding-projects/CPP-Dev/bassil/src/headers/utils.h"
+#include "C:/coding-projects/CPP-Dev/bassil/src/headers/SNBP.h"
+
 #include <algorithm>
 #include <stdexcept>
 #include <fstream>
 #include <limits>
-#include <strsafe.h> // include for StringCchCopyW
+#include <iostream>
+#include <string>
+#include <vector>
+#include <memory>
+#include <sstream>
+#include <iomanip>
+#include <string_view>
+#include <regex>
+
+#include <strsafe.h>
+#include <windows.h>
+#include <io.h>
+#include <fcntl.h>
+#include <wbemidl.h>
+#include <shlobj.h>
+#include <comdef.h>
+
+#pragma comment(lib, "wbemuuid.lib")
+#pragma comment(lib, "user32.lib")
+#pragma comment(lib, "gdi32.lib")
+#pragma comment(lib, "shell32.lib")
 
 /**
  * @brief Fallback implementation of StringCchCopyW if not available in the system headers.
@@ -43,8 +64,19 @@
 #define StringCchCopyW(dest, destSize, src) wcscpy_s(dest, destSize, src)
 #endif
 
-namespace Utils
+namespace SNBP
 {
+    // Version of SNBP
+    std::string version = "Currently not defined, please run SNBP::init() to initialize the package";
+
+    // The author of SNBP
+    std::string author = "Currently not defined, please run SNBP::init() to initialize the package";
+
+    // The date when this version of SNBP was created
+    std::string date = "Currently not defined, please run SNBP::init() to initialize the package";
+
+    // The license that SNBP is currently under
+    std::string license = "Currently not defined, please run SNBP::init() to initialize the package";
 
     /**
      * @brief Splits a string into a vector of substrings based on a specified delimiter.
@@ -71,11 +103,11 @@ namespace Utils
      * @par Example:
      * @code
      * std::string input = "apple,banana,cherry";
-     * std::vector<std::string> result = Utils::split_string(input, ",");
+     * std::vector<std::string> result = SNBP::split_string(input, ",");
      * // result now contains {"apple", "banana", "cherry"}
      * @endcode
      */
-    std::vector<std::string> split_string(const std::string &s, const std::string &delimiter = " ")
+    std::vector<std::string> splitString(const std::string &s, const std::string &delimiter = " ")
     {
         std::vector<std::string> tokens;
         size_t start = 0, end = 0;
@@ -113,7 +145,7 @@ namespace Utils
      * @par Example:
      * @code
      * std::string narrowStr = "Hello, 世界";
-     * std::wstring wideStr = Utils::StringToWString(narrowStr, true);
+     * std::wstring wideStr = SNBP::StringToWString(narrowStr, true);
      * @endcode
      */
     std::wstring StringToWString(const std::string &_string, bool _isUtf8Enabled)
@@ -146,7 +178,7 @@ namespace Utils
      * @par Example:
      * @code
      * std::string narrowStr = "Hello, World!";
-     * LPCWSTR wideStr = Utils::StringToLPCWSTR(narrowStr);
+     * LPCWSTR wideStr = SNBP::StringToLPCWSTR(narrowStr);
      * // Use wideStr with Windows API functions
      * @endcode
      */
@@ -189,7 +221,7 @@ namespace Utils
      *
      * @par Example:
      * @code
-     * int result = Utils::CreateWinAPI32MessageBox("Warning", "Are you sure?", 5);
+     * int result = SNBP::CreateWinAPI32MessageBox("Warning", "Are you sure?", 5);
      * if (result == IDYES) {
      *     // User clicked Yes
      * } else {
@@ -260,7 +292,7 @@ namespace Utils
      *
      * @par Example:
      * @code
-     * Utils::CreateWinAPI32BallonNotification("Update Available", "A new version is ready to install.", 0);
+     * SNBP::CreateWinAPI32BallonNotification("Update Available", "A new version is ready to install.", 0);
      * @endcode
      */
     void CreateWinAPI32BallonNotification(const std::string &_title, const std::string &_message, int _type)
@@ -335,7 +367,7 @@ namespace Utils
      * @par Example:
      * @code
      * try {
-     *     RECT screenSize = Utils::GetMaximizedScreenSize(0); // Primary monitor
+     *     RECT screenSize = SNBP::GetMaximizedScreenSize(0); // Primary monitor
      *     std::cout << "Width: " << (screenSize.right - screenSize.left) << std::endl;
      *     std::cout << "Height: " << (screenSize.bottom - screenSize.top) << std::endl;
      * } catch (const std::runtime_error& e) {
@@ -393,7 +425,7 @@ namespace Utils
      * @par Example:
      * @code
      * std::string str = "   Hello, World!";
-     * Utils::ltrim(str);
+     * SNBP::ltrim(str);
      * std::cout << str; // Outputs: "Hello, World!"
      * @endcode
      */
@@ -425,7 +457,7 @@ namespace Utils
      * @par Example:
      * @code
      * std::string str = "Hello, World!   ";
-     * Utils::rtrim(str);
+     * SNBP::rtrim(str);
      * std::cout << str; // Outputs: "Hello, World!"
      * @endcode
      */
@@ -459,7 +491,7 @@ namespace Utils
      * @par Example:
      * @code
      * std::string str = "   Hello, World!   ";
-     * Utils::trim(str);
+     * SNBP::trim(str);
      * std::cout << str; // Outputs: "Hello, World!"
      * @endcode
      */
@@ -489,13 +521,13 @@ namespace Utils
      *
      * @par Example:
      * @code
-     * int result = Utils::general_log("Application started", true);
+     * int result = SNBP::generalLog("Application started", true);
      * if (result != 0) {
      *     std::cerr << "Failed to write to log file" << std::endl;
      * }
      * @endcode
      */
-    int general_log(const std::string &str, bool isPrintTrue)
+    int generalLog(const std::string &str, bool isPrintTrue)
     {
         if (!isPrintTrue)
         {
@@ -505,7 +537,7 @@ namespace Utils
         std::ofstream outputFile("C:/coding-projects/CPP-Dev/bassil/output/logs.log", std::ios::app);
         if (!outputFile.is_open())
         {
-            std::cerr << "[general_log] Failed to open file." << std::endl;
+            std::cerr << "[generalLog] Failed to open file." << std::endl;
             return 1;
         }
         outputFile << str << "\n";
@@ -513,7 +545,7 @@ namespace Utils
         return 0;
     }
 
-    int clear_file(const std::string &filename)
+    int clearFile(const std::string &filename)
     {
         std::ofstream outputFile(filename, std::ios::trunc);
         if (!outputFile.is_open())
@@ -547,7 +579,7 @@ namespace Utils
      * @par Example:
      * @code
      * try {
-     *     std::string content = Utils::readFileToString("config.txt");
+     *     std::string content = SNBP::readFileToString("config.txt");
      *     std::cout << "File content: " << content << std::endl;
      * } catch (const std::runtime_error& e) {
      *     std::cerr << "Error: " << e.what() << std::endl;
@@ -584,7 +616,7 @@ namespace Utils
      * @par Example:
      * @code
      * try {
-     *     Utils::enableAnsiInConsole();
+     *     SNBP::enableAnsiInConsole();
      *     std::cout << "\033[31mThis text is red\033[0m" << std::endl;
      * } catch (const std::runtime_error& e) {
      *     std::cerr << "Error: " << e.what() << std::endl;
@@ -626,7 +658,7 @@ namespace Utils
      *
      * @par Example:
      * @code
-     * if (Utils::isAnsiEnabledInConsole()) {
+     * if (SNBP::isAnsiEnabledInConsole()) {
      *     std::cout << "\033[32mANSI sequences are supported!\033[0m" << std::endl;
      * } else {
      *     std::cout << "ANSI sequences are not supported." << std::endl;
@@ -662,9 +694,9 @@ namespace Utils
      *
      * @par Example:
      * @code
-     * std::cout << Utils::isValidHexColor("#FF00FF") << std::endl; // Outputs: 1 (true)
-     * std::cout << Utils::isValidHexColor("#G12345") << std::endl; // Outputs: 0 (false)
-     * std::cout << Utils::isValidHexColor("FF00FF") << std::endl;  // Outputs: 0 (false, missing #)
+     * std::cout << SNBP::isValidHexColor("#FF00FF") << std::endl; // Outputs: 1 (true)
+     * std::cout << SNBP::isValidHexColor("#G12345") << std::endl; // Outputs: 0 (false)
+     * std::cout << SNBP::isValidHexColor("FF00FF") << std::endl;  // Outputs: 0 (false, missing #)
      * @endcode
      */
     bool isValidHexColor(const std::string &colorCode)
@@ -694,7 +726,7 @@ namespace Utils
      *
      * @par Example:
      * @code
-     * std::string coloredText = Utils::colorText("Hello, World!", "#00FF00");
+     * std::string coloredText = SNBP::colorText("Hello, World!", "#00FF00");
      * std::cout << coloredText << std::endl; // Outputs "Hello, World!" in green
      * @endcode
      */
@@ -732,7 +764,7 @@ namespace Utils
      * @par Example:
      * @code
      * try {
-     *     std::string boldText = Utils::boldText("Important Message");
+     *     std::string boldText = SNBP::boldText("Important Message");
      *     std::cout << boldText << std::endl; // Outputs "Important Message" in bold
      * } catch (const std::runtime_error& e) {
      *     std::cerr << "Error: " << e.what() << std::endl;
@@ -769,7 +801,7 @@ namespace Utils
      * @par Example:
      * @code
      * try {
-     *     std::string italicText = Utils::italicText("Emphasized text");
+     *     std::string italicText = SNBP::italicText("Emphasized text");
      *     std::cout << italicText << std::endl; // Outputs "Emphasized text" in italic
      * } catch (const std::runtime_error& e) {
      *     std::cerr << "Error: " << e.what() << std::endl;
@@ -805,7 +837,7 @@ namespace Utils
      * @par Example:
      * @code
      * try {
-     *     std::string underlinedText = Utils::underlineText("Important link");
+     *     std::string underlinedText = SNBP::underlineText("Important link");
      *     std::cout << underlinedText << std::endl; // Outputs "Important link" with an underline
      * } catch (const std::runtime_error& e) {
      *     std::cerr << "Error: " << e.what() << std::endl;
@@ -848,7 +880,7 @@ namespace Utils
      * @par Example:
      * @code
      * try {
-     *     std::string formattedText = Utils::formatText("Formatted Text", true, false, true, "#00FF00");
+     *     std::string formattedText = SNBP::formatText("Formatted Text", true, false, true, "#00FF00");
      *     std::cout << formattedText << std::endl; // Outputs "Formatted Text" in green, bold, and underlined
      * } catch (const std::runtime_error& e) {
      *     std::cerr << "Error: " << e.what() << std::endl;
@@ -897,7 +929,7 @@ namespace Utils
      * @par Example:
      * @code
      * std::string coloredText = "\033[31mRed Text\033[0m \033[1mBold Text\033[0m";
-     * std::string plainText = Utils::stripAnsiEscapeCodes(coloredText);
+     * std::string plainText = SNBP::stripAnsiEscapeCodes(coloredText);
      * std::cout << plainText << std::endl; // Outputs: "Red Text Bold Text"
      * @endcode
      */
@@ -927,7 +959,7 @@ namespace Utils
      * @par Example:
      * @code
      * std::string longText = "This is a very long string that needs truncating";
-     * std::string truncated = Utils::truncateString(longText, 20);
+     * std::string truncated = SNBP::truncateString(longText, 20);
      * std::cout << truncated << std::endl; // Outputs: "This is a very lon..."
      * @endcode
      */
@@ -960,7 +992,7 @@ namespace Utils
      *
      * @par Example:
      * @code
-     * std::string centered = Utils::centerString("Hello", 11, '-');
+     * std::string centered = SNBP::centerString("Hello", 11, '-');
      * std::cout << centered << std::endl; // Outputs: "---Hello---"
      * @endcode
      */
@@ -998,7 +1030,7 @@ namespace Utils
      * @par Example:
      * @code
      * std::string longText = "This is a long string that needs to be wrapped to multiple lines for better readability.";
-     * std::string wrapped = Utils::wrapText(longText, 20);
+     * std::string wrapped = SNBP::wrapText(longText, 20);
      * std::cout << wrapped << std::endl;
      * // Outputs:
      * // This is a long
@@ -1056,7 +1088,7 @@ namespace Utils
      *
      * @par Example:
      * @code
-     * bool success = Utils::SetFileAssociationIcon(L".myext", L"C:\\Path\\To\\Icon.ico");
+     * bool success = SNBP::SetFileAssociationIcon(L".myext", L"C:\\Path\\To\\Icon.ico");
      * if (success) {
      *     std::wcout << L"Icon association set successfully." << std::endl;
      * } else {
@@ -1135,7 +1167,7 @@ namespace Utils
      * @code
      * std::fstream file("example.txt", std::ios::in);
      * try {
-     *     std::string line = Utils::readLineFromFile(file, 3);
+     *     std::string line = SNBP::readLineFromFile(file, 3);
      *     std::cout << "Third line: " << line << std::endl;
      * } catch (const std::exception& e) {
      *     std::cerr << "Error: " << e.what() << std::endl;
@@ -1222,4 +1254,312 @@ namespace Utils
 
         return rightPad(leftPad(str, amount), amount);
     }
-} // namespace Utils
+
+    namespace dhi
+    {
+
+        struct HardwareInfo
+        {
+            std::wstring category;
+            std::vector<std::pair<std::wstring, std::wstring>> properties;
+        };
+
+        class WMIService
+        {
+        private:
+            IWbemServices *pSvc;
+            IWbemLocator *pLoc;
+
+        public:
+            WMIService() : pSvc(nullptr), pLoc(nullptr) {}
+
+            bool initialize()
+            {
+                HRESULT hres;
+
+                hres = CoInitializeEx(0, COINIT_MULTITHREADED);
+                if (FAILED(hres))
+                    return false;
+
+                hres = CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT,
+                                            RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
+                if (FAILED(hres))
+                {
+                    CoUninitialize();
+                    return false;
+                }
+
+                hres = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
+                                        IID_IWbemLocator, (LPVOID *)&pLoc);
+                if (FAILED(hres))
+                {
+                    CoUninitialize();
+                    return false;
+                }
+
+                hres = pLoc->ConnectServer(_bstr_t(L"ROOT\\CIMV2"), NULL, NULL, 0, NULL, 0, 0, &pSvc);
+                if (FAILED(hres))
+                {
+                    pLoc->Release();
+                    CoUninitialize();
+                    return false;
+                }
+
+                hres = CoSetProxyBlanket(pSvc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, NULL,
+                                         RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE,
+                                         NULL, EOAC_NONE);
+                if (FAILED(hres))
+                {
+                    pSvc->Release();
+                    pLoc->Release();
+                    CoUninitialize();
+                    return false;
+                }
+
+                return true;
+            }
+
+            ~WMIService()
+            {
+                if (pSvc)
+                    pSvc->Release();
+                if (pLoc)
+                    pLoc->Release();
+                CoUninitialize();
+            }
+
+            std::vector<IWbemClassObject *> executeQuery(const wchar_t *query)
+            {
+                std::vector<IWbemClassObject *> results;
+                IEnumWbemClassObject *pEnumerator = NULL;
+                HRESULT hres = pSvc->ExecQuery(bstr_t("WQL"), bstr_t(query),
+                                               WBEM_FLAG_FORWARD_ONLY | WBEM_FLAG_RETURN_IMMEDIATELY,
+                                               NULL, &pEnumerator);
+
+                if (FAILED(hres))
+                    return results;
+
+                IWbemClassObject *pclsObj = NULL;
+                ULONG uReturn = 0;
+
+                while (pEnumerator)
+                {
+                    hres = pEnumerator->Next(WBEM_INFINITE, 1, &pclsObj, &uReturn);
+                    if (0 == uReturn)
+                        break;
+                    results.push_back(pclsObj);
+                }
+
+                pEnumerator->Release();
+                return results;
+            }
+
+            static std::wstring getPropertyValue(IWbemClassObject *obj, const wchar_t *property)
+            {
+                VARIANT vtProp;
+                HRESULT hr = obj->Get(property, 0, &vtProp, 0, 0);
+                if (SUCCEEDED(hr) && vtProp.vt == VT_BSTR)
+                {
+                    std::wstring result = vtProp.bstrVal;
+                    VariantClear(&vtProp);
+                    return result;
+                }
+                VariantClear(&vtProp);
+                return L"N/A";
+            }
+        };
+
+        HardwareInfo getSystemInfo(WMIService &wmi)
+        {
+            HardwareInfo info;
+            info.category = L"System Information";
+            auto results = wmi.executeQuery(L"SELECT * FROM Win32_ComputerSystem");
+            if (!results.empty())
+            {
+                info.properties.emplace_back(L"Manufacturer", WMIService::getPropertyValue(results[0], L"Manufacturer"));
+                info.properties.emplace_back(L"Model", WMIService::getPropertyValue(results[0], L"Model"));
+                info.properties.emplace_back(L"Total Physical Memory", WMIService::getPropertyValue(results[0], L"TotalPhysicalMemory") + L" bytes");
+            }
+            for (auto obj : results)
+                obj->Release();
+            return info;
+        }
+
+        HardwareInfo getProcessorInfo(WMIService &wmi)
+        {
+            HardwareInfo info;
+            info.category = L"Processor Information";
+            auto results = wmi.executeQuery(L"SELECT * FROM Win32_Processor");
+            for (auto obj : results)
+            {
+                info.properties.emplace_back(L"Name", WMIService::getPropertyValue(obj, L"Name"));
+                info.properties.emplace_back(L"Manufacturer", WMIService::getPropertyValue(obj, L"Manufacturer"));
+                info.properties.emplace_back(L"Max Clock Speed", WMIService::getPropertyValue(obj, L"MaxClockSpeed") + L" MHz");
+                info.properties.emplace_back(L"Number of Cores", WMIService::getPropertyValue(obj, L"NumberOfCores"));
+                info.properties.emplace_back(L"Number of Logical Processors", WMIService::getPropertyValue(obj, L"NumberOfLogicalProcessors"));
+            }
+            for (auto obj : results)
+                obj->Release();
+            return info;
+        }
+
+        HardwareInfo getMemoryInfo(WMIService &wmi)
+        {
+            HardwareInfo info;
+            info.category = L"Memory Information";
+            auto results = wmi.executeQuery(L"SELECT * FROM Win32_PhysicalMemory");
+            for (auto obj : results)
+            {
+                info.properties.emplace_back(L"Manufacturer", WMIService::getPropertyValue(obj, L"Manufacturer"));
+                info.properties.emplace_back(L"Capacity", WMIService::getPropertyValue(obj, L"Capacity") + L" bytes");
+                info.properties.emplace_back(L"Speed", WMIService::getPropertyValue(obj, L"Speed") + L" MHz");
+            }
+            for (auto obj : results)
+                obj->Release();
+            return info;
+        }
+
+        HardwareInfo getDiskInfo(WMIService &wmi)
+        {
+            HardwareInfo info;
+            info.category = L"Disk Information";
+            auto results = wmi.executeQuery(L"SELECT * FROM Win32_DiskDrive");
+            for (auto obj : results)
+            {
+                info.properties.emplace_back(L"Model", WMIService::getPropertyValue(obj, L"Model"));
+                info.properties.emplace_back(L"Size", WMIService::getPropertyValue(obj, L"Size") + L" bytes");
+                info.properties.emplace_back(L"Interface Type", WMIService::getPropertyValue(obj, L"InterfaceType"));
+            }
+            for (auto obj : results)
+                obj->Release();
+            return info;
+        }
+
+        HardwareInfo getGraphicsInfo(WMIService &wmi)
+        {
+            HardwareInfo info;
+            info.category = L"Graphics Information";
+            auto results = wmi.executeQuery(L"SELECT * FROM Win32_VideoController");
+            for (auto obj : results)
+            {
+                info.properties.emplace_back(L"Name", WMIService::getPropertyValue(obj, L"Name"));
+                info.properties.emplace_back(L"Adapter RAM", WMIService::getPropertyValue(obj, L"AdapterRAM") + L" bytes");
+                info.properties.emplace_back(L"Driver Version", WMIService::getPropertyValue(obj, L"DriverVersion"));
+            }
+            for (auto obj : results)
+                obj->Release();
+            return info;
+        }
+
+        std::wstring convertHardwareInfoToString(const HardwareInfo &info)
+        {
+            std::wstringstream ss;
+            ss << L"\n=== " << info.category << L" ===\n";
+            for (const auto &prop : info.properties)
+            {
+                ss << prop.first << L": " << prop.second << L"\n";
+            }
+            return ss.str();
+        }
+
+    } // namespace dhi
+
+    int SNPBinit()
+    {
+        version = "0.7.4";
+        author = "Nerd - Bear";
+        date = "12/9/2024 (DD/MM/YYYY)";
+        license = "MIT License";
+
+        return 0;
+    }
+
+    namespace type
+    {
+        class SNBPSTR
+        {
+        private:
+            std::string data;
+
+        public:
+            SNBPSTR(const std::string &s) : data(s) {}
+
+            int length() const
+            {
+                return data.length();
+            }
+
+            char start() const
+            {
+                if (data.length() >= 1)
+                {
+                    return data[0];
+                }
+                else
+                {
+                    return ' ';
+                }
+            }
+
+            char end() const
+            {
+                if (data.length() >= 1)
+                {
+                    return data[-1];
+                }
+                else
+                {
+                    return ' ';
+                }
+            }
+
+            int index(char token)
+            {
+                if (data.length() == 1)
+                {
+                    if (data[0] == token)
+                    {
+                        return 0;
+                    }
+
+                    return NULL;
+                }
+
+                for (int i = 0; i <= data.length() - 1; i++)
+                {
+                    if (data[i] == token)
+                    {
+                        return i;
+                    }
+                }
+
+                return NULL;
+            }
+
+            std::string toSTDSTR()
+            {
+                return data;
+            }
+
+            // Overload the assignment operator
+            SNBPSTR &operator=(const std::string &s)
+            {
+                data = s;
+                return *this;
+            }
+
+            // Overload the + operator for concatenation
+            SNBPSTR operator+(const SNBPSTR &other) const
+            {
+                return SNBPSTR(data + other.data);
+            }
+
+            // Overload the << operator for easy printing
+            friend std::ostream &operator<<(std::ostream &os, const SNBPSTR &ss)
+            {
+                os << ss.data;
+                return os;
+            }
+        };
+    }
+} // namespace SNBP
