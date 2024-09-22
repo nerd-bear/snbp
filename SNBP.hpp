@@ -1,5 +1,5 @@
 /**
- * @file utils.h
+ * @file SNBP.h
  * @brief Header file containing utility functions for the Bassil language project.
  *
  * This file declares a collection of utility functions that provide various
@@ -17,8 +17,8 @@
  * @copyright Copyright (c) 2024 Bassil
  */
 
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef SNBP_H
+#define SNBP_H
 
 #pragma comment(lib, "shell32.lib") // Link with shell32.lib for SHChangeNotify
 
@@ -29,13 +29,14 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <limits>
 #include <sstream>
 #include <fstream>
 #include <regex>
 #include <shlobj.h>
 
-namespace Utils
+namespace SNBP
 {
     /**
      * @brief Splits a string into a vector of substrings based on a specified delimiter.
@@ -44,7 +45,7 @@ namespace Utils
      * @param delimiter The string that serves as the delimiter for splitting.
      * @return std::vector<std::string> A vector containing the substrings resulting from splitting the input string.
      */
-    std::vector<std::string> split_string(const std::string &s, const std::string &delimiter);
+    std::vector<std::string> splitString(const std::string &s, const std::string &delimiter);
 
     /**
      * @brief Converts a standard string to a wide string.
@@ -121,9 +122,9 @@ namespace Utils
      * @param isPrintTrue Flag to indicate if the message should be printed to the console. Default is true.
      * @return int Returns 0 on successful logging, 1 if there was an error opening the log file.
      */
-    int general_log(const std::string &str, bool isPrintTrue = true);
+    int generalLog(const std::string &str, bool isPrintTrue = true);
 
-    int clear_file(const std::string &filename);
+    int clearFile(const std::string &filename);
 
     /**
      * @brief Reads the entire content of a file into a string.
@@ -258,8 +259,34 @@ namespace Utils
     std::string leftPad(std::string str, int amount);
 
     std::string rightPad(std::string str, int amount);
-    
+
     std::string pad(std::string str, int amount);
+
+    int SNPBinit();
+
+    // namespace SNBP
+    // {
+    //     class SNBP_INFO
+    //     {
+    //     public:
+    //         static const SNBP_INFO &getInstance();
+
+    //         std::string_view getVersion() const { return version; }
+    //         std::string_view getAuthor() const { return author; }
+    //         std::string_view getDate() const { return date; }
+
+    //         // Delete copy constructor and assignment operator
+    //         SNBP_INFO(const SNBP_INFO &) = delete;
+    //         SNBP_INFO &operator=(const SNBP_INFO &) = delete;
+
+    //     private:
+    //         SNBP_INFO();
+
+    //         const std::string version;
+    //         const std::string author;
+    //         const std::string date;
+    //     };
+    // };
 }
 
-#endif // UTILS_H
+#endif // SNBP_H
